@@ -1,0 +1,32 @@
+{
+  "name": "deepseek-codex",
+  "version": "1.0.0",
+  "description": "DeepSeek Chat 桌面版 · Codex 风格主题",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win dir"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.deepseek.codex",
+    "productName": "DeepSeek Codex",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "assets/icon.ico"
+    ],
+    "win": {
+      "target": "dir",
+      "icon": "assets/icon.ico"
+    }
+  }
+}

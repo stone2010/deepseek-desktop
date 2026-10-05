@@ -1,0 +1,13 @@
+node_modules/
+dist/
+app/
+release/
+userdata/
+*.asar
+*.asar.bak
+*.log
+debug-*.png
+debug-*.json
+debug-*.txt
+.DS_Store
+Thumbs.db
