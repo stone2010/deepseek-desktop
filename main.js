@@ -15,7 +15,7 @@ if (app.isPackaged) {
   try { fs.mkdirSync(path.join(path.dirname(app.getPath('exe')), 'userdata'), { recursive: true }); } catch (e) {}
   app.setPath('userData', path.join(path.dirname(app.getPath('exe')), 'userdata'));
 } else {
-  app.setPath('userData', path.join(app.getPath('appData'), 'deepseek-codex'));
+  app.setPath('userData', path.join(app.getPath('appData'), 'deepseek-desktop'));
 }
 
 const gotLock = app.requestSingleInstanceLock();

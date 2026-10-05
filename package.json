@@ -1,7 +1,7 @@
 {
   "name": "deepseek-desktop",
   "version": "1.0.0",
-  "description": "DeepSeek Chat 桌面版 · Codex 风格主题",
+  "description": "DeepSeek Chat 桌面版 · 液态玻璃主题 + 本地 Token 用量看板",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -14,8 +14,8 @@
     "electron-builder": "^26.15.3"
   },
   "build": {
-    "appId": "com.deepseek.codex",
-    "productName": "DeepSeek Codex",
+    "appId": "com.deepseek.desktop",
+    "productName": "deepseek-desktop",
     "directories": {
       "output": "release"
     },
