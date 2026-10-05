@@ -1,4 +1,4 @@
-# DeepSeek Codex · Token 用量看板
+# deepseek-desktop · Token 用量看板
 
 一个基于 Electron 的 DeepSeek 网页桌面封装，内置**本地 Token 用量看板**：
 按时间分时段聚合（今日按小时、其余按天），区分「服务端精确值」与「本地估算值」，
