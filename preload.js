@@ -1961,7 +1961,7 @@ function tkRange(tab) {
 }
 
 function tkSum(start, end) {
-  const acc = { in: 0, out: 0, think: 0, xi: 0, xo: 0, xt: 0, xN: 0, msgs: 0, ch: 0, apiIn: 0, apiOut: 0, apiN: 0 };
+  const acc = { in: 0, out: 0, think: 0, xi: 0, xo: 0, xt: 0, xN: 0, eN: 0, msgs: 0, ch: 0, apiIn: 0, apiOut: 0, apiN: 0 };
   const evs = tkStore.data ? tkStore.data.events : [];
   for (const e of evs) {
     if (e.t < start || e.t >= end) continue;
@@ -1978,10 +1978,13 @@ function tkSum(start, end) {
       acc.xN++;
     } else if (e.r === 'in') {
       acc.in += n;
+      acc.eN++;
     } else if (e.r === 'out') {
       acc.out += n;
+      acc.eN++;
     } else {
       acc.think += n;
+      acc.eN++;
     }
     if (e.r === 'in' || e.r === 'out') acc.msgs++;
     acc.ch += e.ch || 0;
@@ -2220,7 +2223,7 @@ function tkBuildHTML(big) {
     '<div class="cbx-tk-share"><i class="ex" style="width:' + mix.toFixed(1) + '%"></i><i class="es" style="width:' + (100 - mix).toFixed(1) + '%"></i></div>' +
     '<div class="cbx-tk-rows">' +
     '<div class="row"><span class="k ex"></span><span class="n">服务端精确</span><span class="v">' + tkFmtFull(range.exact) + '</span><span class="c">' + range.xN + ' 条</span></div>' +
-    '<div class="row"><span class="k es"></span><span class="n">本地估算</span><span class="v">' + tkFmtFull(range.est) + '</span><span class="c">' + Math.max(0, range.msgs - range.xN) + ' 条</span></div>' +
+    '<div class="row"><span class="k es"></span><span class="n">本地估算</span><span class="v">' + tkFmtFull(range.est) + '</span><span class="c">' + range.eN + ' 条</span></div>' +
     (range.apiN ? '<div class="row"><span class="k ap"></span><span class="n">接口 usage</span><span class="v">' + tkFmtFull(range.apiIn + range.apiOut) + '</span><span class="c">' + range.apiN + ' 次</span></div>' : '') +
     '</div><div class="cbx-tk-note" style="margin-top:9px">精确值来自服务端逐条消息的 <b>accumulated_token_usage</b> 差分；估算值只在服务端数据到达前占位，同步后会被精确值替换。</div></div>';
 
@@ -2453,18 +2456,6 @@ function tkEnsureStyle() {
   s.id = TK_STYLE_ID;
   s.textContent = TK_CSS;
   (document.head || document.documentElement).appendChild(s);
-}
-
-function tkActiveClass(navHost) {
-  if (!navHost) return null;
-  const counts = {};
-  const kids = [...navHost.children].filter(b => b.classList.contains('ds-button'));
-  if (kids.length < 2) return null;
-  kids.forEach(b => [...b.classList].forEach(c => { counts[c] = (counts[c] || 0) + 1; }));
-  const cand = Object.keys(counts).filter(c => counts[c] === 1 && /^_[0-9a-f]{5,}$/i.test(c));
-  if (cand.length) return cand[0];
-  const cand2 = Object.keys(counts).filter(c => counts[c] === 1 && c.indexOf('ds-') !== 0 && !/^cbx-/.test(c));
-  return cand2.length ? cand2[0] : null;
 }
 
 function tkLocate() {
