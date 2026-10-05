@@ -1200,6 +1200,12 @@ body.light .cbx-tk-rows .k.es{background:rgba(25,30,60,.24);}
 .cbx-tk-card{border-radius:16px;padding:13px 15px 14px;}
 .cbx-tk-panel{border-radius:16px;padding:13px 15px 14px;margin-bottom:14px;}
 @media (max-width:900px){.cbx-tk-cards{grid-template-columns:repeat(2,1fr);}.cbx-tk-grid2{grid-template-columns:1fr;}}
+.cbx-tk-nav{display:flex;align-items:center;gap:10px;width:calc(100% - 20px);box-sizing:border-box;margin:4px 10px 8px;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--cbx-tx1,#b0b0bd);font-size:13px;font-family:inherit;cursor:pointer;transition:all .15s ease;text-align:left;}
+body.light .cbx-tk-nav{border-color:rgba(25,30,60,.10);background:rgba(255,255,255,.55);color:var(--cbx-tx1,#5d5d70);}
+.cbx-tk-nav:hover{background:rgba(77,107,254,.16)!important;color:#fff!important;border-color:rgba(77,107,254,.45)!important;}
+.cbx-tk-nav.cbx-on{background:linear-gradient(135deg,#4d6bfe,#3d5af1)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 2px 12px rgba(77,107,254,.35);}
+.cbx-tk-nav .cbx-tk-nav-ic{display:flex;align-items:center;justify-content:center;}
+.cbx-tk-nav .cbx-tk-nav-ic svg{width:15px;height:15px;display:block;}
 `;
 
 function tkIsCJK(cp) {
@@ -2461,79 +2467,111 @@ function tkActiveClass(navHost) {
   return cand2.length ? cand2[0] : null;
 }
 
+function tkLocate() {
+  // 面板宿主（右侧内容列）：消息滚动区的父容器；兜底取宽顶栏的父容器
+  let body = null;
+  const sas = [...document.querySelectorAll('.ds-scroll-area')];
+  const right = sas.find((s) => s.getBoundingClientRect().left > 250);
+  if (right && right.parentElement) body = right.parentElement;
+  if (!body) {
+    const top = [...document.querySelectorAll('.cbx-topbar')].find((el) => el.getBoundingClientRect().width > 500);
+    if (top && top.parentElement) body = top.parentElement;
+  }
+  // 侧栏入口落点：Stone 头像块（插到它前面）
+  let anchor = null;
+  let sidebar = null;
+  const stone = [...document.querySelectorAll('[class]')].find((el) => {
+    const r = el.getBoundingClientRect();
+    return (el.textContent || '').trim() === 'Stone' && r.width > 20 && r.width < 400 && r.height < 80 && r.left < 300;
+  });
+  if (stone) {
+    sidebar = stone.parentElement || null;
+    anchor = stone;
+  } else {
+    const sb = document.querySelector('.dc04ec1d');
+    if (sb) { sidebar = sb; anchor = sb.firstElementChild; }
+  }
+  return { body, sidebar, anchor };
+}
+
+function tkNavButton() {
+  const b = document.createElement('button');
+  b.id = TK_NAV_ID;
+  b.type = 'button';
+  b.className = 'cbx-tk-nav';
+  b.innerHTML = '<span class="cbx-tk-nav-ic">' + TK_ICON + '</span><span class="cbx-tk-nav-lb">Token 用量</span>';
+  b.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    tkActivate(true);
+  }, true);
+  return b;
+}
+
 function tkActivate(on) {
   tkUI.active = on;
   const nav = document.getElementById(TK_NAV_ID);
   const pane = document.getElementById(TK_PANE_ID);
-  const body = document.querySelector('.f2ff50b5');
-  const navHost = document.querySelector('.d316d158');
-  const activeCls = tkActiveClass(navHost);
+  const loc = tkLocate();
+  const body = loc ? loc.body : null;
+  if (nav) nav.classList.toggle('cbx-on', !!on);
+  if (body) {
+    [...body.children].forEach((c) => {
+      if (c === pane) return;
+      if (c.classList && c.classList.contains('cbx-topbar')) return;
+      c.style.display = on ? 'none' : '';
+    });
+  }
   if (on) {
-    if (activeCls) {
-      [...navHost.children].forEach(b => { if (b !== nav) b.classList.remove(activeCls); });
-      if (nav) nav.classList.add(activeCls);
+    if (pane) {
+      pane.style.display = '';
+      try {
+        const bar = [...document.querySelectorAll('.cbx-topbar')].find((el) => el.getBoundingClientRect().width > 500);
+        const gap = bar ? bar.getBoundingClientRect().bottom - pane.getBoundingClientRect().top : 0;
+        pane.style.boxSizing = 'border-box';
+        pane.style.paddingTop = gap > 4 ? Math.round(gap) + 'px' : '';
+      } catch (e) {}
+      tkBindPane(pane);
+      tkRender(pane, false);
     }
-    const scroll = body ? body.querySelector(':scope > .ds-scroll-area') : null;
-    if (scroll) scroll.style.display = 'none';
-    if (pane) { pane.style.display = ''; tkBindPane(pane); tkRender(pane, false); }
   } else {
-    if (activeCls && nav) nav.classList.remove(activeCls);
-    const scroll = body ? body.querySelector(':scope > .ds-scroll-area') : null;
-    if (scroll) scroll.style.display = '';
-    if (pane) pane.style.display = 'none';
+    if (pane) { pane.style.display = 'none'; pane.style.paddingTop = ''; }
     tkCloseOverlay();
   }
 }
 
 function tkInject() {
-  const navHost = document.querySelector('.d316d158');
-  const body = document.querySelector('.f2ff50b5');
-  if (!navHost || !body) return false;
+  const loc = tkLocate();
+  if (!loc || !loc.body || !loc.sidebar) return false;
   tkEnsureStyle();
-  const natives = [...navHost.children].filter(b => b.classList.contains('ds-button'));
   let nav = document.getElementById(TK_NAV_ID);
-  if (!nav || nav.parentElement !== navHost) {
+  if (!nav || nav.parentElement !== loc.sidebar) {
     if (nav) nav.remove();
-    const src = natives.find(b => (b.textContent || '').indexOf('账号管理') >= 0) || natives[1] || natives[natives.length - 1];
-    if (!src) return false;
-    nav = src.cloneNode(true);
-    nav.id = TK_NAV_ID;
-    nav.removeAttribute('aria-pressed');
-    nav.removeAttribute('aria-selected');
-    const act0 = tkActiveClass(navHost);
-    if (act0) nav.classList.remove(act0);
-    const label = nav.querySelector('.ds-button__content');
-    if (label) label.textContent = 'Token 用量';
-    const icon = nav.querySelector('.ds-button__icon');
-    if (icon) icon.innerHTML = TK_ICON;
-    nav.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      tkActivate(true);
-    }, true);
-    navHost.insertBefore(nav, src.nextSibling);
+    nav = tkNavButton();
+    loc.sidebar.insertBefore(nav, loc.anchor);
     if (tkUI.active) tkActivate(true);
   }
   let pane = document.getElementById(TK_PANE_ID);
-  if (!pane || pane.parentElement !== body) {
+  if (!pane || pane.parentElement !== loc.body) {
     if (pane) pane.remove();
     pane = document.createElement('div');
     pane.id = TK_PANE_ID;
     pane.style.display = tkUI.active ? '' : 'none';
-    body.appendChild(pane);
+    loc.body.appendChild(pane);
     tkBindPane(pane);
     tkRender(pane, false);
     if (tkUI.active) tkActivate(true);
   }
-  if (!navHost.dataset.tkBound) {
-    navHost.dataset.tkBound = '1';
-    navHost.addEventListener('click', (e) => {
+  if (!loc.sidebar.dataset.tkBound) {
+    loc.sidebar.dataset.tkBound = '1';
+    loc.sidebar.addEventListener('click', (e) => {
       if (e.target.closest('#' + TK_NAV_ID)) return;
-      if (e.target.closest('.ds-button') && tkUI.active) tkActivate(false);
+      if (tkUI.active) tkActivate(false);
     }, true);
   }
   return true;
 }
+
 
 let tkBooted = false;
 try {
